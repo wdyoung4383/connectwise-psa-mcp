@@ -16,6 +16,8 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from . import config
 from .auth import MissingCredentials, get_credentials
@@ -24,6 +26,7 @@ from .client import make_client
 from .conditions import CONDITIONS_HELP
 from .executor import ExecutionError
 from .executor import cw_get as _cw_get
+from .gateway_auth import GatewayAuthMiddleware, load_gateway_tokens
 from .logging_setup import configure_logging
 
 mcp = FastMCP(
@@ -138,16 +141,35 @@ async def cw_get(
         return {"error": str(e)}
 
 
+async def health(request: Request) -> JSONResponse:
+    """Unauthenticated liveness check for the hosting platform."""
+    return JSONResponse({"status": "ok"})
+
+
+mcp.custom_route("/health", methods=["GET"])(health)
+
+
 def main() -> None:
     """Run the server. Defaults to HTTP; set CW_MCP_TRANSPORT=stdio for local."""
     import os
+
+    from starlette.middleware import Middleware
 
     configure_logging()
     transport = os.getenv("CW_MCP_TRANSPORT", "http")
     if transport == "stdio":
         mcp.run()
-    else:
-        mcp.run(transport="http", host=config.HTTP_HOST, port=config.HTTP_PORT)
+        return
+
+    # Hosted HTTP: fail closed if no gateway tokens are configured, then gate
+    # every request (except /health) behind the X-Gateway-Key middleware.
+    token_map = load_gateway_tokens()
+    mcp.run(
+        transport="http",
+        host=config.HTTP_HOST,
+        port=config.HTTP_PORT,
+        middleware=[Middleware(GatewayAuthMiddleware, token_map=token_map)],
+    )
 
 
 if __name__ == "__main__":
