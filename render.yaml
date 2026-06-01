@@ -1,0 +1,16 @@
+# Render Blueprint. After committing, create a new Blueprint in the Render
+# dashboard pointed at this repo, then set CW_GATEWAY_TOKENS (a secret) there.
+services:
+  - type: web
+    name: connectwise-psa-mcp
+    runtime: docker
+    plan: free  # free instances sleep when idle; bump to "starter" for always-on
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: CW_MCP_HOST
+        value: "0.0.0.0"
+      - key: CW_LOG_LEVEL
+        value: INFO
+      - key: CW_GATEWAY_TOKENS
+        sync: false  # set in the Render dashboard (secret); JSON {sha256: label}
