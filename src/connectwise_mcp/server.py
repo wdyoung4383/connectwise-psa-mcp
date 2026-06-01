@@ -41,6 +41,23 @@ mcp = FastMCP(
 
 catalog = load_catalog()
 
+_CW_GET_DESCRIPTION = (
+    """Execute an in-scope ConnectWise GET and return the JSON result.
+
+`path` is a path from search_endpoints, e.g. "/service/tickets" or
+"/service/tickets/{id}". Fill `{...}` segments via `path_params`
+(e.g. {"id": 123}).
+
+Filtering uses the ConnectWise `conditions` query language:
+"""
+    + CONDITIONS_HELP
+    + """
+
+`fields` projects a subset of columns (comma-separated) to slim responses.
+`order_by` sorts (e.g. "dateEntered desc"). `page`/`page_size` paginate.
+"""
+)
+
 
 @mcp.tool
 def list_modules() -> dict[str, Any]:
@@ -91,7 +108,7 @@ def describe_endpoint(operation_id: str) -> dict[str, Any]:
     return desc
 
 
-@mcp.tool
+@mcp.tool(description=_CW_GET_DESCRIPTION)
 async def cw_get(
     path: str,
     path_params: dict[str, Any] | None = None,
@@ -102,22 +119,10 @@ async def cw_get(
     page: int | None = None,
     page_size: int = config.DEFAULT_PAGE_SIZE,
 ) -> Any:
-    (
-        """Execute an in-scope ConnectWise GET and return the JSON result.
+    """Execute an in-scope ConnectWise GET.
 
-    `path` is a path from search_endpoints, e.g. "/service/tickets" or
-    "/service/tickets/{id}". Fill `{...}` segments via `path_params`
-    (e.g. {"id": 123}).
-
-    Filtering uses the ConnectWise `conditions` query language:
+    Filtering syntax is in the tool description (_CW_GET_DESCRIPTION).
     """
-        + CONDITIONS_HELP
-        + """
-
-    `fields` projects a subset of columns (comma-separated) to slim responses.
-    `order_by` sorts (e.g. "dateEntered desc"). `page`/`page_size` paginate.
-    """
-    )
     try:
         creds = get_credentials()
     except MissingCredentials as e:
