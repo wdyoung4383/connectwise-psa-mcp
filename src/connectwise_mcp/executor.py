@@ -7,15 +7,20 @@ flag that could be flipped.
 
 from __future__ import annotations
 
+import logging
 import re
+import time
 from typing import Any
 
 import httpx
 
 from .catalog import Catalog
 from .config import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
+from .logging_setup import redact
 
 _PATH_VAR = re.compile(r"\{([^}]+)\}")
+
+log = logging.getLogger(__name__)
 
 
 class ExecutionError(Exception):
@@ -78,11 +83,40 @@ async def cw_get(
     if extra_query:
         query.update(extra_query)
 
-    resp = await client.get(url, params=query)
+    start = time.monotonic()
+    try:
+        resp = await client.get(url, params=query)
+    except httpx.TimeoutException as e:
+        raise ExecutionError(
+            f"ConnectWise request timed out for {url}. The instance may be slow "
+            "or unreachable; try again or narrow the query."
+        ) from e
+    except httpx.TransportError as e:
+        raise ExecutionError(
+            f"Could not reach ConnectWise for {url}: {type(e).__name__}. "
+            "Check the region/host and network connectivity."
+        ) from e
+
+    duration_ms = (time.monotonic() - start) * 1000
+    # Log path/status/duration only — never query values, which can carry PII.
+    log.info("cw_get %s -> %s (%.0f ms)", url, resp.status_code, duration_ms)
+
     if resp.status_code >= 400:
-        # Surface CW's error body to the model rather than a bare status.
-        detail = resp.text[:1000]
-        raise ExecutionError(f"ConnectWise returned {resp.status_code}: {detail}")
+        if resp.status_code in (401, 403):
+            raise ExecutionError(
+                f"ConnectWise authentication failed (HTTP {resp.status_code}). "
+                "Verify the company id, public/private keys, and clientId."
+            )
+        if resp.status_code == 404:
+            raise ExecutionError(
+                f"ConnectWise returned 404 Not Found for {url}. The record or "
+                "path may not exist on this instance."
+            )
+        detail = redact(resp.text[:1000])
+        raise ExecutionError(
+            f"ConnectWise rejected the request (HTTP {resp.status_code}): {detail}"
+        )
+
     try:
         return resp.json()
     except ValueError:
