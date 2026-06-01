@@ -117,7 +117,10 @@ class Catalog:
 
         t = node.get("type")
         if t == "array" or "items" in node:
-            return {"type": "array", "items": self.resolve_schema(node.get("items"), _depth + 1, _seen)}
+            return {
+                "type": "array",
+                "items": self.resolve_schema(node.get("items"), _depth + 1, _seen),
+            }
         if "properties" in node or t == "object":
             props = {}
             for pname, pschema in (node.get("properties") or {}).items():
@@ -176,8 +179,10 @@ class Catalog:
 
 @lru_cache(maxsize=1)
 def load_catalog() -> Catalog:
-    with resources.files("connectwise_mcp.data").joinpath(_SPEC_RESOURCE).open(
-        "r", encoding="utf-8"
-    ) as f:
+    with (
+        resources.files("connectwise_mcp.data")
+        .joinpath(_SPEC_RESOURCE)
+        .open("r", encoding="utf-8") as f
+    ):
         spec = json.load(f)
     return Catalog(spec)

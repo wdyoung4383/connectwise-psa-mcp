@@ -3,7 +3,7 @@
 import pytest
 
 from connectwise_mcp.catalog import load_catalog
-from connectwise_mcp.executor import _fill_path, ExecutionError
+from connectwise_mcp.executor import ExecutionError, _fill_path
 
 
 def test_catalog_loads_and_is_get_only():

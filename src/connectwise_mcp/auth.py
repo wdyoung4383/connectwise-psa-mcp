@@ -24,6 +24,7 @@ from dataclasses import dataclass
 try:  # available only when running under the HTTP transport
     from fastmcp.server.dependencies import get_http_headers
 except Exception:  # pragma: no cover - fastmcp always present in practice
+
     def get_http_headers() -> dict[str, str]:  # type: ignore
         return {}
 
