@@ -86,3 +86,56 @@ Then run `claude mcp list` to confirm it's registered.
 - [ ] Client lists the four `connectwise-psa` tools
 - [ ] Asking the client to read open service tickets returns real data
 - [ ] No credentials appear in the server's log output
+
+## Remote (hosted) — connecting to a deployed server
+
+If the server is hosted (see `docs/hosting.md`), clients connect to its public
+URL and supply both a **gateway token** and their **ConnectWise keys** as headers.
+
+### Claude Code
+
+```bash
+claude mcp add connectwise-psa \
+  --transport http \
+  https://<your-app>.onrender.com/mcp \
+  --header "X-Gateway-Key: <your-gateway-token>" \
+  --header "X-CW-Company-Id: your_company_id" \
+  --header "X-CW-Public-Key: your_public_key" \
+  --header "X-CW-Private-Key: your_private_key" \
+  --header "X-CW-Client-Id: your_client_id_guid" \
+  --header "X-CW-Region: na"
+```
+
+Then `claude mcp list` to confirm it's registered.
+
+### Claude Desktop
+
+Claude Desktop reaches remote MCP servers through the `mcp-remote` bridge. Add
+this to `claude_desktop_config.json` (Settings → Developer → Edit Config):
+
+```json
+{
+  "mcpServers": {
+    "connectwise-psa": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote",
+        "https://<your-app>.onrender.com/mcp",
+        "--header", "X-Gateway-Key: <your-gateway-token>",
+        "--header", "X-CW-Company-Id: your_company_id",
+        "--header", "X-CW-Public-Key: your_public_key",
+        "--header", "X-CW-Private-Key: your_private_key",
+        "--header", "X-CW-Client-Id: your_client_id_guid",
+        "--header", "X-CW-Region: na"
+      ]
+    }
+  }
+}
+```
+
+(Requires Node.js for `npx`.) Restart Claude Desktop; the `connectwise-psa`
+tools should appear.
+
+> Note: native remote-server + custom-header support in Claude Desktop's config
+> has varied across versions; the `mcp-remote` bridge above is the reliable path.
+> Claude Code supports `--transport http --header` directly.
