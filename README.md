@@ -1,5 +1,7 @@
 # ConnectWise PSA MCP Server (read-only)
 
+[![CI](https://github.com/wdyoung4383/connectwise-psa-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/wdyoung4383/connectwise-psa-mcp/actions/workflows/ci.yml)
+
 A [FastMCP](https://gofastmcp.com) server that exposes **ConnectWise Manage
 (PSA)** as a read-only gateway for AI agents.
 
