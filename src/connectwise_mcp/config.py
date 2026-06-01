@@ -28,7 +28,14 @@ MAX_PAGE_SIZE = 1000  # ConnectWise hard limit
 
 # HTTP transport binding (only used when running as a hosted server).
 HTTP_HOST = os.getenv("CW_MCP_HOST", "127.0.0.1")
-HTTP_PORT = int(os.getenv("CW_MCP_PORT", "8000"))
+
+
+def resolve_http_port() -> int:
+    """HTTP port: CW_MCP_PORT, then the PaaS-provided PORT, then 8000."""
+    return int(os.getenv("CW_MCP_PORT") or os.getenv("PORT") or "8000")
+
+
+HTTP_PORT = resolve_http_port()
 
 
 def base_url(region: str | None = None, host: str | None = None) -> str:
