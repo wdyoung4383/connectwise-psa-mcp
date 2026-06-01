@@ -91,12 +91,12 @@ Then run `claude mcp list` to confirm it's registered.
 
 If the server is hosted (see `docs/hosting.md`), clients connect to its public
 URL and supply both a **gateway token** and their **ConnectWise keys** as headers.
+(For how to obtain the ConnectWise keys — company id, public/private keys, clientId, region — see "Get your ConnectWise API keys" earlier in this guide.)
 
 ### Claude Code
 
 ```bash
-claude mcp add connectwise-psa \
-  --transport http \
+claude mcp add --transport http connectwise-psa \
   https://<your-app>.onrender.com/mcp \
   --header "X-Gateway-Key: <your-gateway-token>" \
   --header "X-CW-Company-Id: your_company_id" \
