@@ -36,12 +36,13 @@ Expected output ends with `OK: /system/members returned 1 record(s)`. If you see
 
 Edit `claude_desktop_config.json` (Settings → Developer → Edit Config) and add an
 entry. Use the **absolute path** to the Python interpreter in your `.venv`:
+Find your venv's Python path by activating the venv and running `python -c "import sys; print(sys.executable)"` (on macOS/Linux the interpreter is `.venv/bin/python`).
 
 ```json
 {
   "mcpServers": {
     "connectwise-psa": {
-      "command": "C:\\Users\\wdyou\\connectwisemcp\\connectwise-mcp\\.venv\\Scripts\\python.exe",
+      "command": "C:\\path\\to\\connectwise-mcp\\.venv\\Scripts\\python.exe",
       "args": ["-m", "connectwise_mcp"],
       "env": {
         "CW_MCP_TRANSPORT": "stdio",
@@ -72,8 +73,10 @@ claude mcp add connectwise-psa \
   --env CW_PRIVATE_KEY=your_private_key \
   --env CW_CLIENT_ID=your_client_id_guid \
   --env CW_REGION=na \
-  -- C:\\Users\\wdyou\\connectwisemcp\\connectwise-mcp\\.venv\\Scripts\\python.exe -m connectwise_mcp
+  -- C:\path\to\connectwise-mcp\.venv\Scripts\python.exe -m connectwise_mcp
 ```
+
+Replace the interpreter path with your venv's Python (see Section 4 for how to find it; macOS/Linux: `.venv/bin/python`).
 
 Then run `claude mcp list` to confirm it's registered.
 
