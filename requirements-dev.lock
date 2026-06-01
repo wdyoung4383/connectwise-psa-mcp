@@ -1,3 +1,6 @@
+# Reference snapshot of the dev environment (pip freeze --exclude-editable).
+# CI installs from pyproject.toml pins, not this file; refresh after dependency bumps.
+# Generated on Windows: pywin32/pywin32-ctypes are Windows-only — install selectively on other platforms.
 aiofile==3.11.1
 annotated-types==0.7.0
 anyio==4.13.0

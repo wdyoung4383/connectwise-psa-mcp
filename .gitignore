@@ -4,3 +4,4 @@ __pycache__/
 *.egg-info/
 .env
 .pytest_cache/
+# requirements-dev.lock is intentionally tracked (reference snapshot)
