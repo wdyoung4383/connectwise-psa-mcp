@@ -24,6 +24,7 @@ from .client import make_client
 from .conditions import CONDITIONS_HELP
 from .executor import ExecutionError
 from .executor import cw_get as _cw_get
+from .logging_setup import configure_logging
 
 mcp = FastMCP(
     name="connectwise-psa",
@@ -141,6 +142,7 @@ def main() -> None:
     """Run the server. Defaults to HTTP; set CW_MCP_TRANSPORT=stdio for local."""
     import os
 
+    configure_logging()
     transport = os.getenv("CW_MCP_TRANSPORT", "http")
     if transport == "stdio":
         mcp.run()
