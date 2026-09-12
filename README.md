@@ -1,31 +1,73 @@
-# ConnectWise PSA MCP Server (read-only)
+# ConnectWise PSA MCP Server
 
 [![CI](https://github.com/wdyoung4383/connectwise-psa-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/wdyoung4383/connectwise-psa-mcp/actions/workflows/ci.yml)
 
 A [FastMCP](https://gofastmcp.com) server that exposes **ConnectWise Manage
-(PSA)** as a read-only gateway for AI agents.
+(PSA)** to AI agents: every read, create and update operation in the public
+API, and no delete.
 
-## Why a gateway, not 300 tools
+## Why a gateway, not 2,700 tools
 
-The ConnectWise API has thousands of operations; the in-scope read subset alone
-is **324 GET endpoints** across 71 categories. Exposing one tool per endpoint
-would overwhelm any LLM client. Instead the OpenAPI spec is loaded as a runtime
-**catalog**, and four gateway tools sit in front of it:
+The ConnectWise API has thousands of operations; the in-scope set is **2,780
+operations** (1,725 GET, 399 POST, 327 PUT, 329 PATCH) across 12 modules.
+Exposing one tool per operation would overwhelm any LLM client. Instead the
+OpenAPI spec is loaded as a runtime **catalog**, and seven gateway tools sit in
+front of it:
 
 | Tool | Purpose |
 |------|---------|
-| `list_modules` | Orientation: modules + endpoint counts |
-| `search_endpoints` | Find a GET endpoint by keyword |
-| `describe_endpoint` | See an endpoint's params + response shape |
+| `list_modules` | Orientation: modules + operation counts per method |
+| `search_endpoints` | Find an operation by keyword, optionally by module/method |
+| `describe_endpoint` | See an operation's params, request body and response shape |
 | `cw_get` | Execute an in-scope GET (paging + `conditions` filtering) |
+| `cw_post` | Execute an in-scope POST (create a record / invoke an action) |
+| `cw_put` | Execute an in-scope PUT (replace a whole record) |
+| `cw_patch` | Execute an in-scope PATCH (JSON Patch operation list) |
 
-**Read-only by construction:** there is no create/update/delete code path.
+**No delete by construction:** DELETE operations are dropped when the catalog
+is built, so there is no delete tool and no delete code path. The write tools
+also refuse any method other than POST/PUT/PATCH.
+
+Read tools carry the MCP `readOnlyHint`; write tools do not, so clients that
+gate on annotations prompt before a write. `cw_put` is additionally flagged
+`destructiveHint` because a PUT replaces the entire record.
 
 ## Scope
 
-Only `GET` operations under the categories listed in
-[`scope.py`](src/connectwise_mcp/scope.py) are included. To change scope, edit
-that set and regenerate `data/openapi_get_filtered.json` from the full spec.
+[`scope.py`](src/connectwise_mcp/scope.py) defines the rules:
+`ALLOWED_METHODS` (GET, POST, PUT, PATCH) and `SELECTED_CATEGORIES` (`None` =
+every category, or a set of OpenAPI tags to narrow it). Rebuild the catalog
+after changing either:
+
+```bash
+python scripts/build_catalog.py /path/to/full-connectwise-openapi.json
+```
+
+The full spec ("ConnectWise Manage Public Endpoints") is downloadable from the
+[ConnectWise Developer Network](https://developer.connectwise.com/Products/ConnectWise_PSA/REST)
+(login required). The build prunes unreferenced schemas, non-2xx responses and
+the per-request `clientId` header so the shipped
+`data/openapi_catalog.json` stays around 3 MB. The committed catalog was built
+from spec version **2025.16**.
+
+## Writes
+
+`cw_post`, `cw_put` and `cw_patch` are enabled by default. Set
+`CW_MCP_ALLOW_WRITES=false` to run a read-only gateway; the tools stay
+registered but refuse every call, so a hosted deployment can be flipped without
+a code change. Writes use the same per-request credentials as reads, so what an
+API member can change in ConnectWise is what the agent can change here.
+
+ConnectWise PATCH bodies are JSON Patch operation lists:
+
+```json
+[{"op": "replace", "path": "/summary", "value": "New summary"},
+ {"op": "replace", "path": "/status", "value": {"id": 42}}]
+```
+
+`describe_endpoint` returns the request body schema for every write operation.
+The one `multipart/form-data` upload in the spec (`POST /system/documents`) is
+in the catalog but refused at execution time; only JSON bodies are sent.
 
 ## Credentials
 

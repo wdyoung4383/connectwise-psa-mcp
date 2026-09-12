@@ -1,6 +1,6 @@
 # Connecting the ConnectWise PSA MCP server (local stdio)
 
-This guide wires the **read-only** server into an MCP client over stdio, using
+This guide wires the server into an MCP client over stdio, using
 your ConnectWise credentials as `CW_*` environment variables. Nothing is stored
 server-side — the process reads the env vars per request.
 
@@ -58,8 +58,11 @@ Find your venv's Python path by activating the venv and running `python -c "impo
 ```
 
 Restart Claude Desktop. The `connectwise-psa` tools (`list_modules`,
-`search_endpoints`, `describe_endpoint`, `cw_get`) should appear. Ask it to
-"list the ConnectWise modules" to confirm.
+`search_endpoints`, `describe_endpoint`, `cw_get`, `cw_post`, `cw_put`,
+`cw_patch`) should appear. Ask it to "list the ConnectWise modules" to confirm.
+
+Add `"CW_MCP_ALLOW_WRITES": "false"` to the `env` block if this client should
+be read-only.
 
 ## 5. Connect Claude Code
 
@@ -83,7 +86,7 @@ Then run `claude mcp list` to confirm it's registered.
 ## Manual verification checklist
 
 - [ ] `python scripts/smoke_live.py` prints `OK: /system/members returned ...`
-- [ ] Client lists the four `connectwise-psa` tools
+- [ ] Client lists the seven `connectwise-psa` tools
 - [ ] Asking the client to read open service tickets returns real data
 - [ ] No credentials appear in the server's log output
 
