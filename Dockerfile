@@ -2,8 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install the package (non-editable). pyproject's force-include bundles the
-# OpenAPI data file into the wheel.
+# Install the package (non-editable). The OpenAPI catalog under
+# src/connectwise_mcp/data ships inside the wheel.
 COPY pyproject.toml README.md ./
 COPY src ./src
 RUN pip install --no-cache-dir .

@@ -1,9 +1,15 @@
 # Hosting the ConnectWise PSA MCP server (Render)
 
-This deploys the **read-only** server to a public HTTPS URL. Clients connect
-from Claude Code/Desktop and pass **their own** ConnectWise keys as headers — the
-host stores no ConnectWise credentials. A per-customer **gateway token** gates
+This deploys the server to a public HTTPS URL. Clients connect from Claude
+Code/Desktop and pass **their own** ConnectWise keys as headers — the host
+stores no ConnectWise credentials. A per-customer **gateway token** gates
 access.
+
+The server exposes reads **and** create/update writes (never delete). Writes
+run under each caller's own ConnectWise API member, so the member's permissions
+bound what can change. To host a read-only gateway, set the env var
+`CW_MCP_ALLOW_WRITES=false` on the service; the write tools then refuse every
+call.
 
 ## 1. Deploy to Render
 

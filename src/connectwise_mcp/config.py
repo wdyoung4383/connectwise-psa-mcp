@@ -37,6 +37,20 @@ def resolve_http_port() -> int:
 
 HTTP_PORT = resolve_http_port()
 
+_FALSE_VALUES = {"0", "false", "no", "off"}
+
+
+def writes_enabled() -> bool:
+    """Whether cw_post/cw_put/cw_patch may execute (CW_MCP_ALLOW_WRITES).
+
+    Defaults to enabled. Set CW_MCP_ALLOW_WRITES=false to run a read-only
+    gateway; the write tools stay registered but refuse every call, so the
+    deployment can be flipped without a code change. Read at call time so
+    tests and operators can toggle it without restarting.
+    """
+    raw = os.getenv("CW_MCP_ALLOW_WRITES", "true").strip().lower()
+    return raw not in _FALSE_VALUES
+
 
 def base_url(region: str | None = None, host: str | None = None) -> str:
     """Resolve the API base URL from a region code or an explicit host."""

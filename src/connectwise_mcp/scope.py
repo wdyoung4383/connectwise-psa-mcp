@@ -1,79 +1,26 @@
-"""Categories (OpenAPI tags) included in this server's catalog.
+"""What part of the ConnectWise API this server exposes.
 
-Read-only scope: only GET operations under these categories are exposed.
-Edit by hand to widen/narrow scope, then regenerate the filtered spec.
+Scope is decided at build time: ``scripts/build_catalog.py`` filters the full
+ConnectWise OpenAPI spec down to the operations allowed here and writes the
+result to ``data/openapi_catalog.json``. The runtime catalog only ever sees the
+filtered file, so anything excluded here has no code path at all.
+
+Rules:
+
+* ``ALLOWED_METHODS`` - HTTP methods kept. DELETE is deliberately excluded:
+  there is no delete tool and no delete entry in the catalog.
+* ``SELECTED_CATEGORIES`` - OpenAPI tags to keep, or ``None`` for every
+  category in the spec. Set to a set of tag names to narrow the surface.
+
+Edit and rebuild with::
+
+    python scripts/build_catalog.py /path/to/full-connectwise-openapi.json
 """
 
-SELECTED_CATEGORIES = {
-    "Activities",
-    "ActivityTypes",
-    "AgreementAdditions",
-    "AgreementAdjustments",
-    "AgreementRecaps",
-    "AgreementTypes",
-    "Agreements",
-    "AuditTrail",
-    "BillingStatuses",
-    "BoardInfos",
-    "BoardItems",
-    "BoardStatuses",
-    "BoardSubTypes",
-    "BoardTeams",
-    "BoardTypes",
-    "Boards",
-    "CatalogsItem",
-    "ChargeCodes",
-    "Codes",
-    "Companies",
-    "CompanyCustomNotes",
-    "CompanyFinances",
-    "CompanyGroups",
-    "CompanyNotes",
-    "CompanySites",
-    "CompanyStatuses",
-    "CompanyTypeInfos",
-    "CompanyTypes",
-    "Contact Types",
-    "ContactDepartments",
-    "ContactGroups",
-    "ContactNotes",
-    "ContactTypes",
-    "Contacts",
-    "Departments",
-    "Invoices",
-    "Locations",
-    "Members",
-    "Opportunities",
-    "OpportunityForecastItems",
-    "OpportunityForecasts",
-    "OpportunityNotes",
-    "OpportunityStatuses",
-    "OpportunityTypes",
-    "Orders",
-    "Priorities",
-    "ProductsItem",
-    "ProjectNotes",
-    "ProjectPhases",
-    "ProjectStatuses",
-    "ProjectTicketNotes",
-    "ProjectTickets",
-    "ProjectTypes",
-    "Projects",
-    "SalesTeams",
-    "ScheduleDetails",
-    "ScheduleEntries",
-    "ScheduleEntryDetails",
-    "SchedulingMemberInfos",
-    "ServiceTeams",
-    "Sources",
-    "Statuses",
-    "TicketChangeLog",
-    "TicketNotes",
-    "TicketTasks",
-    "Tickets",
-    "TimeAccruals",
-    "TimeEntries",
-    "TimeSheets",
-    "WorkRoles",
-    "WorkTypes",
-}
+from __future__ import annotations
+
+ALLOWED_METHODS: frozenset[str] = frozenset({"GET", "POST", "PUT", "PATCH"})
+
+# None means "all categories in the spec". To narrow, use a set of tag names,
+# e.g. {"Tickets", "Companies", "Contacts"}.
+SELECTED_CATEGORIES: frozenset[str] | None = None
